@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лиза</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --c: #1a1a1a;
+  --cm: #6b6b6b;
+  --cl: #aaaaaa;
+  --bg: #f7f5f2;
+  --acc: #1a1a1a;
+  --line: rgba(26,26,26,0.12);
+}
+
+html { height: 100%; }
+body { min-height: 100%; background: var(--bg); font-family: 'Inter', sans-serif; color: var(--c); overflow-x: hidden; transition: background 0.5s; }
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; width: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1.5rem; position: relative; }
+.screen.active { display: flex; }
+@keyframes in { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:translateY(0); } }
+.screen.active > * { animation: in 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+.screen.active > *:nth-child(2) { animation-delay:.07s; }
+.screen.active > *:nth-child(3) { animation-delay:.14s; }
+.screen.active > *:nth-child(4) { animation-delay:.21s; }
+.screen.active > *:nth-child(5) { animation-delay:.28s; }
+.screen.active > *:nth-child(6) { animation-delay:.35s; }
+
+/* ── TYPE ── */
+.display { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(52px,13vw,96px); line-height:.95; letter-spacing:-.02em; }
+.display em { font-style:italic; }
+.heading { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(30px,7vw,50px); line-height:1.1; letter-spacing:-.01em; }
+.heading em { font-style:italic; }
+.label { font-size:10px; font-weight:500; letter-spacing:.2em; text-transform:uppercase; color:var(--cl); }
+.body-text { font-size:14px; font-weight:300; line-height:1.8; color:var(--cm); }
+.small { font-size:11px; font-weight:300; color:var(--cl); letter-spacing:.04em; }
+
+.rule { width:100%; height:1px; background:var(--line); }
+.rule-short { width:36px; height:1px; background:var(--acc); }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:10px; background:var(--c); color:var(--bg); border:none; padding:.95rem 2.5rem; font-family:'Inter',sans-serif; font-size:11px; font-weight:400; letter-spacing:.13em; text-transform:uppercase; cursor:pointer; transition:opacity .2s; }
+.btn:hover { opacity:.75; }
+.btn:disabled { opacity:.25; cursor:not-allowed; }
+.btn-ghost { display:inline-flex; align-items:center; justify-content:center; background:transparent; color:var(--cm); border:1px solid var(--line); padding:.95rem 2.5rem; font-family:'Inter',sans-serif; font-size:11px; font-weight:400; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:border-color .2s,color .2s; }
+.btn-ghost:hover { border-color:var(--c); color:var(--c); }
+
+/* ── S0: COLOR PICKER ── */
+.color-wrap { width:100%; max-width:420px; display:flex; flex-direction:column; gap:2.5rem; }
+
+/* hue wheel area */
+.picker-area { width:100%; display:flex; flex-direction:column; gap:1.5rem; }
+
+/* preset chips */
+.presets { display:flex; gap:10px; flex-wrap:wrap; }
+.preset { width:32px; height:32px; border-radius:50%; cursor:pointer; border:2.5px solid transparent; transition:transform .18s, border-color .18s; flex-shrink:0; }
+.preset:hover { transform:scale(1.15); }
+.preset.sel { border-color:var(--c); transform:scale(1.18); }
+
+/* custom hue slider */
+.hue-row { display:flex; align-items:center; gap:12px; }
+.hue-slider { flex:1; height:8px; border-radius:4px; outline:none; cursor:pointer; border:none; padding:0; appearance:none; -webkit-appearance:none; background:linear-gradient(to right,#f55,#fa0,#ff5,#5f5,#55f,#f5f,#f55); }
+.hue-slider::-webkit-slider-thumb { appearance:none; -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:white; border:2px solid rgba(0,0,0,0.3); box-shadow:0 1px 4px rgba(0,0,0,0.2); cursor:pointer; }
+.hue-preview { width:32px; height:32px; border-radius:50%; border:2px solid var(--line); flex-shrink:0; transition:background .1s; }
+.sat-row { display:flex; align-items:center; gap:12px; }
+.sat-label { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--cl); width:52px; }
+.sat-slider { flex:1; height:6px; border-radius:3px; outline:none; cursor:pointer; border:none; padding:0; appearance:none; -webkit-appearance:none; }
+.sat-slider::-webkit-slider-thumb { appearance:none; -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:white; border:2px solid rgba(0,0,0,0.25); cursor:pointer; }
+
+/* ── S1: QUESTION ── */
+.q-wrap { width:100%; max-width:380px; display:flex; flex-direction:column; gap:3rem; }
+.yes-no-row { display:flex; gap:12px; align-items:stretch; }
+
+/* ── S2: ENVELOPE ── */
+#envBox { width:min(320px,80vw); position:relative; cursor:pointer; user-select:none; }
+.env-outer { width:100%; padding-bottom:64%; border:1px solid rgba(26,26,26,0.18); position:relative; background:#eeebe6; overflow:visible; }
+.env-tri-bl { position:absolute; bottom:0; left:0; width:0; height:0; border-style:solid; border-color:transparent transparent #e3dfd8 transparent; }
+.env-tri-br { position:absolute; bottom:0; right:0; width:0; height:0; border-style:solid; border-color:transparent transparent #d9d4cc transparent; }
+.env-flap { position:absolute; top:-1px; left:-1px; right:-1px; transform-origin:top center; transition:transform .75s cubic-bezier(.4,0,.2,1); z-index:5; }
+.env-flap svg { display:block; width:100%; }
+.env-flap.open { transform:rotateX(-175deg); }
+/* env-stamp removed */
+.env-wax { position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); width:26px; height:26px; border-radius:50%; background:var(--acc); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--bg); z-index:10; transition:opacity .3s; font-family:'Cormorant Garamond',serif; font-style:italic; }
+.env-letter { position:absolute; left:50%; transform:translateX(-50%) translateY(0); bottom:10px; width:72%; background:white; border:1px solid rgba(26,26,26,0.1); padding:12px 14px; font-family:'Cormorant Garamond',serif; font-weight:300; font-size:14px; font-style:italic; color:var(--cm); text-align:center; line-height:1.6; transition:transform .7s .35s cubic-bezier(.34,1.56,.64,1),opacity .5s .35s; opacity:0; z-index:3; }
+.env-letter.show { transform:translateX(-50%) translateY(-50px); opacity:1; }
+
+/* ── PHOTO DETAILS ── */
+.photo-strip { display:flex; gap:0; width:100%; max-width:440px; height:110px; overflow:hidden; }
+.photo-cell { flex:1; position:relative; overflow:hidden; cursor:default; }
+.photo-cell img { width:100%; height:100%; object-fit:cover; display:block; filter:saturate(0.7) brightness(0.9); transition:filter .3s; }
+.photo-cell:hover img { filter:saturate(1) brightness(1); }
+.photo-caption { position:absolute; bottom:0; left:0; right:0; padding:4px 8px; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,0.85); background:linear-gradient(transparent,rgba(0,0,0,0.5)); }
+
+/* ── OPTS ── */
+.opt-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; width:100%; max-width:440px; }
+.opt { padding:1.25rem 1.25rem; border:1px solid var(--line); border-right:none; border-bottom:none; cursor:pointer; display:flex; flex-direction:column; gap:8px; transition:background .15s; }
+.opt:nth-child(2n) { border-right:1px solid var(--line); }
+.opt:last-child, .opt:nth-last-child(2):nth-child(odd) { border-bottom:1px solid var(--line); }
+.opt:nth-last-child(1) { border-bottom:1px solid var(--line); }
+.opt:hover { background:rgba(26,26,26,0.03); }
+.opt.sel { background:var(--c); }
+.opt.sel .opt-label,.opt.sel .opt-sub { color:var(--bg); }
+.opt.sel .opt-icon { filter:invert(1); }
+.opt-icon { font-size:20px; }
+.opt-label { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:300; line-height:1.2; color:var(--c); }
+.opt-sub { font-size:10px; letter-spacing:.07em; color:var(--cl); }
+
+/* ── NO BUTTON ── */
+#noBtn { font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--cm); background:transparent; border:1px solid var(--line); padding:.75rem 2rem; cursor:pointer; transition:left .12s ease,top .12s ease,opacity .4s; }
+
+/* ── FINAL ── */
+.tag { display:inline-block; border:1px solid var(--line); padding:4px 12px; font-size:11px; letter-spacing:.07em; color:var(--cm); margin:3px; }
+
+@media(max-width:400px) {
+  .photo-strip { height:80px; }
+  .yes-no-row { flex-direction:column; align-items:flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ S0: ЦВЕТ ══ -->
+<div class="screen active" id="s0">
+  <div class="color-wrap">
+    <div>
+      <div class="label" style="margin-bottom:1.25rem;">Прежде всего</div>
+      <div class="heading">Какой твой<br><em>любимый цвет?</em></div>
+    </div>
+    <div class="rule"></div>
+    <div class="picker-area">
+      <!-- Presets -->
+      <div class="presets" id="presets">
+        <div class="preset" style="background:#8b2020;" onclick="pickPreset(this,0,62,false,22)"></div>
+        <div class="preset" style="background:#d4603a;" onclick="pickPreset(this,15,70,false,42)"></div>
+        <div class="preset" style="background:#c49b10;" onclick="pickPreset(this,47,85,false,38)"></div>
+        <div class="preset" style="background:#2e7d3e;" onclick="pickPreset(this,130,45,false,28)"></div>
+        <div class="preset" style="background:#12a08a;" onclick="pickPreset(this,170,82,false,34)"></div>
+        <div class="preset" style="background:#2850a0;" onclick="pickPreset(this,218,60,false,36)"></div>
+        <div class="preset" style="background:#6040c0;" onclick="pickPreset(this,255,50,false,40)"></div>
+        <div class="preset" style="background:#b03080;" onclick="pickPreset(this,320,58,false,38)"></div>
+        <div class="preset" style="background:#c4637a;" onclick="pickPreset(this,348,50,false,44)"></div>
+        <div class="preset" style="background:#1a1a1a;" onclick="pickPreset(this,0,0,true,22)"></div>
+      </div>
+      <!-- Custom hue -->
+      <div>
+        <div class="small" style="margin-bottom:8px;">или выбери свой оттенок</div>
+        <div class="hue-row">
+          <input class="hue-slider" type="range" min="0" max="360" value="0" id="hueSlider" oninput="updateCustom()">
+          <div class="hue-preview" id="huePreview"></div>
+        </div>
+        <div class="sat-row" style="margin-top:10px;">
+          <div class="sat-label">Яркость</div>
+          <input class="sat-slider" type="range" min="10" max="65" value="35" id="satSlider" oninput="updateCustom()" style="background:var(--sat-grad,#ccc);">
+          <div class="small" id="satVal">35</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn" id="colorBtn" disabled onclick="goTo('s1')">Это мой →</button>
+  </div>
+</div>
+
+<!-- ══ S1: КОНВЕРТ ══ -->
+<div class="screen" id="s1">
+  <div class="label" style="margin-bottom:2rem;">Письмо</div>
+
+  <div style="position:relative; display:flex; flex-direction:column; align-items:center; width:min(320px,80vw);">
+    <div id="envBox" onclick="openEnv()" style="width:100%; position:relative; cursor:pointer; user-select:none;">
+      <div class="env-outer" id="envOuter">
+        <div class="env-tri-bl" id="envBL"></div>
+        <div class="env-tri-br" id="envBR"></div>
+        <div class="env-flap" id="envFlap">
+          <svg viewBox="0 0 320 108" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <polygon points="0,0 320,0 160,108" fill="#e8e4de" stroke="rgba(26,26,26,0.15)" stroke-width="1" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="env-wax" id="envWax" style="position:absolute;top:calc(108/320 * 100% + 18px);left:50%;transform:translateX(-50%);bottom:auto;z-index:11;">А</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:1.5rem;"></div>
+  <div class="display" style="text-align:center;"><em>Лиза</em></div>
+  <div style="height:0.5rem;"></div>
+  <div class="body-text" style="text-align:center;" id="envHint">нажми на конверт</div>
+</div>
+
+<!-- БУМАЖКА — модальный оверлей -->
+<div id="paperOverlay" style="
+  display:none;
+  position:fixed; inset:0; z-index:200;
+  background:rgba(0,0,0,0);
+  transition:background 0.4s;
+  align-items:center; justify-content:center;
+  padding:2rem;
+">
+  <div id="paperCard" style="
+    background:#fefcf9;
+    border:1px solid rgba(26,26,26,0.1);
+    padding:2rem 1.75rem 1.75rem;
+    width:100%; max-width:340px;
+    font-family:'Cormorant Garamond',serif;
+    font-weight:300;
+    line-height:1.85;
+    color:var(--cm);
+    font-size:16px;
+    position:relative;
+    box-shadow:0 20px 60px rgba(0,0,0,0.15);
+    transform:translateY(30px) scale(0.96);
+    opacity:0;
+    transition:transform 0.5s cubic-bezier(0.34,1.3,0.64,1), opacity 0.4s;
+  ">
+    <!-- линованность -->
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(transparent,transparent 31px,rgba(26,26,26,0.05) 32px);pointer-events:none;"></div>
+    <div style="position:relative;">
+      <div style="font-style:italic;font-size:20px;color:var(--c);margin-bottom:0.75rem;">Лиза,</div>
+      <div>ты мне очень понравилась.<br>
+      Я давно хотел написать,<br>
+      но не знал как.<br><br>
+      Поэтому вот — сайт&nbsp;🙂<br><br>
+      Очень хочу с тобой погулять.</div>
+      <div style="margin-top:1.25rem;font-style:italic;font-size:13px;color:var(--cl);text-align:right;">— Саша</div>
+    </div>
+    <!-- вопрос и кнопки -->
+    <div style="position:relative;margin-top:1.5rem;border-top:1px solid rgba(26,26,26,0.08);padding-top:1.25rem;">
+      <div style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:17px;color:var(--c);margin-bottom:1rem;">Можем погулять?</div>
+      <div style="display:flex;gap:10px;align-items:stretch;position:relative;">
+        <button class="btn" onclick="goTo('s2')" style="flex:1;justify-content:center;">Да →</button>
+        <div style="position:relative;flex-shrink:0;">
+          <button id="noBtn" onclick="showNoTooltip()" style="
+            font-family:'Inter',sans-serif;
+            font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+            color:var(--c); background:transparent;
+            border:1.5px solid var(--c);
+            padding:.95rem 1.5rem;
+            cursor:pointer; height:100%;
+          ">Нет</button>
+          <div id="noTooltip" style="
+            display:none;
+            position:absolute;
+            bottom:calc(100% + 8px);
+            right:0;
+            background:var(--c);
+            color:var(--bg);
+            font-family:'Inter',sans-serif;
+            font-size:11px;
+            letter-spacing:0.04em;
+            padding:8px 12px;
+            white-space:nowrap;
+            pointer-events:none;
+          ">работает только «Да» 🙂</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S3: КУДА ══ -->
+<div class="screen" id="s2">
+  <div style="width:100%;max-width:440px;display:flex;flex-direction:column;gap:2rem;">
+    <div>
+      <div class="label" style="margin-bottom:1rem;">01 / 02</div>
+      <div class="heading">Куда<br><em>пойдём?</em></div>
+    </div>
+    <div class="rule"></div>
+
+    <div class="opt-grid" id="placeGrid">
+      <div class="opt" data-val="Кофе и прогулка" onclick="pick(this,'place')">
+        <div class="opt-icon">☕</div>
+        <div><div class="opt-label">Кофе</div><div class="opt-sub">и прогулка</div></div>
+      </div>
+      <div class="opt" data-val="Парк" onclick="pick(this,'place')">
+        <div class="opt-icon">🌿</div>
+        <div><div class="opt-label">Парк</div><div class="opt-sub">на воздухе</div></div>
+      </div>
+      <div class="opt" data-val="Кино" onclick="pick(this,'place')">
+        <div class="opt-icon">🎬</div>
+        <div><div class="opt-label">Кино</div><div class="opt-sub">тёмный зал</div></div>
+      </div>
+      <div class="opt" data-val="Ужин" onclick="pick(this,'place')">
+        <div class="opt-icon">🍽</div>
+        <div><div class="opt-label">Ужин</div><div class="opt-sub">в хорошем месте</div></div>
+      </div>
+      <div class="opt" data-val="Конные прогулки" onclick="pick(this,'place')">
+        <div class="opt-icon">🐴</div>
+        <div><div class="opt-label">Лошади</div><div class="opt-sub">конная прогулка</div></div>
+      </div>
+      <div class="opt" data-val="Боулинг" onclick="pick(this,'place')">
+        <div class="opt-icon">🎳</div>
+        <div><div class="opt-label">Боулинг</div><div class="opt-sub">или бильярд</div></div>
+      </div>
+      <div class="opt" data-val="Выставка" onclick="pick(this,'place')">
+        <div class="opt-icon">🖼</div>
+        <div><div class="opt-label">Выставка</div><div class="opt-sub">или музей</div></div>
+      </div>
+      <div class="opt" data-val="" onclick="pickCustom(this,'place')" id="placeCustomOpt">
+        <div class="opt-icon">✏️</div>
+        <div style="width:100%;">
+          <div class="opt-label" id="placeCustomLabel">Свой вариант</div>
+          <input id="placeCustomInput" type="text" placeholder="напиши сама..." onclick="event.stopPropagation()" oninput="onCustomInput(this,'place')" style="
+            display:none;
+            width:100%;
+            border:none;
+            border-bottom:1px solid rgba(255,255,255,0.4);
+            background:transparent;
+            font-family:'Inter',sans-serif;
+            font-size:12px;
+            color:white;
+            padding:4px 0;
+            margin-top:4px;
+            outline:none;
+          ">
+        </div>
+      </div>
+    </div>
+    <button class="btn" id="btn1" disabled onclick="goTo('s3')">Дальше →</button>
+  </div>
+</div>
+
+<!-- ══ S4: КОГДА ══ -->
+<div class="screen" id="s3">
+  <div style="width:100%;max-width:440px;display:flex;flex-direction:column;gap:2rem;">
+    <div>
+      <div class="label" style="margin-bottom:1rem;">02 / 02</div>
+      <div class="heading">Когда<br><em>удобно?</em></div>
+    </div>
+    <div class="rule"></div>
+    <div class="opt-grid" id="timeGrid">
+      <div class="opt" data-val="В эти выходные" onclick="pick(this,'time')">
+        <div class="opt-icon">📅</div>
+        <div><div class="opt-label">Выходные</div><div class="opt-sub">в эти</div></div>
+      </div>
+      <div class="opt" data-val="На следующей неделе" onclick="pick(this,'time')">
+        <div class="opt-icon">🗓</div>
+        <div><div class="opt-label">Неделя</div><div class="opt-sub">следующая</div></div>
+      </div>
+      <div class="opt" data-val="" onclick="pickCustom(this,'time')" id="timeCustomOpt" style="grid-column:1/-1;border-bottom:1px solid var(--line);border-right:1px solid var(--line);">
+        <div class="opt-icon">✏️</div>
+        <div style="width:100%;">
+          <div class="opt-label" id="timeCustomLabel">Свой вариант</div>
+          <input id="timeCustomInput" type="text" placeholder="напиши сама..." onclick="event.stopPropagation()" oninput="onCustomInput(this,'time')" style="
+            display:none;
+            width:100%;
+            border:none;
+            border-bottom:1px solid rgba(255,255,255,0.4);
+            background:transparent;
+            font-family:'Inter',sans-serif;
+            font-size:12px;
+            color:white;
+            padding:4px 0;
+            margin-top:4px;
+            outline:none;
+          ">
+        </div>
+      </div>
+    </div>
+    <button class="btn" id="btn2" disabled onclick="goTo('s4')">Дальше →</button>
+  </div>
+</div>
+
+<!-- ══ S5: ФИНАЛ ══ -->
+<div class="screen" id="s4">
+  <div style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:2rem;">
+    <div class="label">Договорились</div>
+    <div class="display"><em>Отлично,<br>Лиза</em></div>
+    <div class="rule"></div>
+    <div>
+      <div class="small" style="margin-bottom:8px;">план такой:</div>
+      <div id="tags"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body-text" style="max-width:260px;">Девочка из Кузбасса<br>заслуживает хорошего вечера.</div>
+    <div style="margin-top:.5rem;">
+      <div class="small">с уважением,</div>
+      <div class="heading" style="font-size:28px;margin-top:4px;"><em>Саша</em></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── STATE ── */
+const ch = { place:'', time:'' };
+let envDone = false;
+let curH = 0, curS = 35, isDark = false;
+
+/* ── COLOR UTILS ── */
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => { const k = (n + h / 30) % 12; const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); return Math.round(255 * c).toString(16).padStart(2,'0'); };
+  return '#' + f(0) + f(8) + f(4);
+}
+function lighten(h, s) { return hslToHex(h, Math.max(s - 20, 5), 93); }
+function applyColor(h, s, dark, l) {
+  curH = h; curS = s; isDark = dark;
+  const btnL = l || 22;
+  if (dark) {
+    const r = document.documentElement.style;
+    r.setProperty('--c',    '#1a1a1a');
+    r.setProperty('--cm',   '#6b6b6b');
+    r.setProperty('--cl',   '#aaaaaa');
+    r.setProperty('--acc',  '#1a1a1a');
+    r.setProperty('--bg',   '#f7f5f2');
+    r.setProperty('--line', 'rgba(26,26,26,0.12)');
+    document.body.style.background = '#f7f5f2';
+  } else if (s === 0 && l === 0) {
+    // белый / нейтральный
+    const r = document.documentElement.style;
+    r.setProperty('--c',    '#1a1a1a');
+    r.setProperty('--cm',   '#6b6b6b');
+    r.setProperty('--cl',   '#aaaaaa');
+    r.setProperty('--acc',  '#1a1a1a');
+    r.setProperty('--bg',   '#f5f5f5');
+    r.setProperty('--line', 'rgba(26,26,26,0.12)');
+    document.body.style.background = '#f5f5f5';
+  } else {
+    const isNeutral = s < 8;
+    const textC  = isNeutral ? '#3a3a3a' : hslToHex(h, s, btnL);
+    const midC   = isNeutral ? '#6b6b6b' : hslToHex(h, Math.min(s, 35), Math.min(btnL + 20, 62));
+    const lightC = isNeutral ? '#aaaaaa' : hslToHex(h, Math.min(s, 25), Math.min(btnL + 38, 72));
+    const bg     = isNeutral ? '#f5f5f5' : hslToHex(h, Math.min(s, 18), 96);
+    const lineC  = isNeutral ? 'rgba(26,26,26,0.12)' : `hsla(${h},${Math.min(s,40)}%,25%,0.13)`;
+    const r = document.documentElement.style;
+    r.setProperty('--c',    textC);
+    r.setProperty('--cm',   midC);
+    r.setProperty('--cl',   lightC);
+    r.setProperty('--acc',  textC);
+    r.setProperty('--bg',   bg);
+    r.setProperty('--line', lineC);
+    document.body.style.background = bg;
+  }
+  document.getElementById('colorBtn').disabled = false;
+}
+function pickPreset(el, h, s, dark, l) {
+  document.querySelectorAll('.preset').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('hueSlider').value = h;
+  document.getElementById('satSlider').value = s;
+  applyColor(h, s, dark||false, l||22);
+  updateSatGrad();
+  const lv = (dark || s < 8) ? 22 : (l||22);
+  document.getElementById('huePreview').style.background = dark ? '#1a1a1a' : hslToHex(h, s, lv);
+}
+function updateCustom() {
+  document.querySelectorAll('.preset').forEach(p => p.classList.remove('sel'));
+  const h = +document.getElementById('hueSlider').value;
+  const s = +document.getElementById('satSlider').value;
+  document.getElementById('satVal').textContent = s;
+  document.getElementById('huePreview').style.background = hslToHex(h, s, 22);
+  updateSatGrad();
+  applyColor(h, s, false, 22);
+}
+function updateSatGrad() {
+  const h = +document.getElementById('hueSlider').value;
+  document.getElementById('satSlider').style.background =
+    `linear-gradient(to right, hsl(${h},10%,80%), hsl(${h},70%,55%))`;
+}
+
+/* ── NAV ── */
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display='none'; });
+  // скрыть модалку письма если переходим дальше
+  const overlay = document.getElementById('paperOverlay');
+  overlay.style.display = 'none';
+  const el = document.getElementById(id);
+  el.style.display = 'flex';
+  void el.offsetWidth;
+  el.classList.add('active');
+  if (id === 's2') {
+    // закрываем оверлей с письмом уже обработан выше
+  }
+  if (id === 's4') {
+    const nb = document.getElementById('noBtn');
+    if (nb) { nb.style.opacity = '0'; nb.style.pointerEvents = 'none'; }
+    document.getElementById('tags').innerHTML =
+      '<span class="tag">'+ch.place+'</span><span class="tag">'+ch.time+'</span>';
+    // отправка результата в Telegram
+    const token = '8782603503:AAF4Dz3P7h77OsmHA2yLjp-X4LAE8Gli-xc';
+    const chatId = '612887832';
+    const text = encodeURIComponent('🌸 Лиза ответила!\n\n📍 Место: ' + ch.place + '\n🗓 Время: ' + ch.time);
+    const tgUrl = 'https://api.telegram.org/bot' + token + '/sendMessage?chat_id=' + chatId + '&text=' + text;
+    // img — работает в большинстве браузеров
+    new Image().src = tgUrl;
+    // script — запасной вариант для file://
+    try {
+      const s = document.createElement('script');
+      s.src = tgUrl;
+      document.head.appendChild(s);
+      setTimeout(() => { try { s.remove(); } catch(e){} }, 5000);
+    } catch(e) {}
+  }
+}
+
+/* ── ENVELOPE ── */
+function openEnv() {
+  if (envDone) return;
+  envDone = true;
+  document.getElementById('envBox').style.cursor = 'default';
+
+  // 1. крышка открывается
+  document.getElementById('envFlap').classList.add('open');
+  document.getElementById('envWax').style.opacity = '0';
+
+  // 2. показываем оверлей и анимируем карточку
+  setTimeout(() => {
+    // сброс tooltip если был открыт
+    const tip = document.getElementById('noTooltip');
+    if (tip) tip.style.display = 'none';
+
+    const overlay = document.getElementById('paperOverlay');
+    overlay.style.display = 'flex';
+    void overlay.offsetWidth;
+    overlay.style.background = 'rgba(0,0,0,0.35)';
+    const card = document.getElementById('paperCard');
+    card.style.opacity = '1';
+    card.style.transform = 'translateY(0) scale(1)';
+  }, 700);
+}
+
+/* ── OPTS ── */
+function pick(el, grp) {
+  el.parentElement.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  ch[grp] = el.dataset.val;
+  document.getElementById(grp === 'place' ? 'btn1' : 'btn2').disabled = false;
+}
+
+function pickCustom(el, grp) {
+  // выделяем карточку
+  el.parentElement.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  // показываем поле ввода
+  const inputId = grp === 'place' ? 'placeCustomInput' : 'timeCustomInput';
+  const input = document.getElementById(inputId);
+  input.style.display = 'block';
+  input.focus();
+  // если уже что-то введено — сразу активируем
+  if (input.value.trim()) {
+    ch[grp] = input.value.trim();
+    document.getElementById(grp === 'place' ? 'btn1' : 'btn2').disabled = false;
+  } else {
+    document.getElementById(grp === 'place' ? 'btn1' : 'btn2').disabled = true;
+  }
+}
+
+function onCustomInput(input, grp) {
+  const val = input.value.trim();
+  ch[grp] = val;
+  document.getElementById(grp === 'place' ? 'btn1' : 'btn2').disabled = !val;
+}
+
+/* ── NO BUTTON ── */
+let noTooltipTimer = null;
+function showNoTooltip() {
+  const tip = document.getElementById('noTooltip');
+  tip.style.display = 'block';
+  clearTimeout(noTooltipTimer);
+  noTooltipTimer = setTimeout(() => { tip.style.display = 'none'; }, 2000);
+}
+
+document.querySelectorAll('.screen').forEach(s => { if (!s.classList.contains('active')) s.style.display='none'; });
+document.addEventListener('DOMContentLoaded', () => {
+  updateSatGrad();
+  document.getElementById('huePreview').style.background = hslToHex(0, 35, 22);
+  const ob = document.getElementById('envOuter');
+  if (ob) {
+    const w = ob.offsetWidth, h = ob.offsetHeight;
+    const bl = document.getElementById('envBL');
+    const br = document.getElementById('envBR');
+    if (bl) bl.style.borderWidth = `0 0 ${h*0.55}px ${w*0.55}px`;
+    if (br) br.style.borderWidth = `${h*0.55}px 0 0 ${w*0.55}px`;
+  }
+});
+</script>
+</body>
+</html>
